@@ -34,19 +34,54 @@ import numpy as np
 
 
 def find_root(
-    func: callable,
-    grad: callable,
+    F: callable,
+    J: callable,
     x0: np.ndarray,
     max_num_iterations: int = 1000,
     eps: float = 1e-10,
     step_size: float = 1.0,
-):
-    x = x0
-    values = []
-    for i in range(max_num_iterations):
-        if abs(func(x)) < eps:
-            break
-        x -= func(x) / grad(x) * step_size
-        values.append(x)
+) -> np.ndarray:
+    """Find the root of the given function F
 
+    Args:
+        F (callable): target function
+        J (callable): derivatives of the target function
+        x0 (np.ndarray): initial value of x
+        max_num_iterations (int, optional): maximum number of iterations. Defaults to 1000.
+        eps (float, optional): stopping criterion. Defaults to 1e-10.
+        step_size (float, optional): step size. Defaults to 1.0.
+
+    Returns:
+        np.ndarray: zeros of the function F
+    """
+    x = x0
+    for i in range(max_num_iterations):
+        if abs(F(x)) < eps:
+            # print(f"current x={x}, F(x)={F(x)}.")
+            break
+        x -= F(x) / J(x) * step_size
+
+    # print(f"F(x)={F(x)}, x={x}, i={i}.")
+    if abs(F(x)) > eps:
+        raise ValueError(f"Cannot find the root! x={x}.")
     return x
+
+
+def minimize(
+    F: callable,
+    J: callable,
+    H: callable,
+    x0: np.ndarray,
+    max_num_iterations: int = 1000,
+    eps: float = 1e-10,
+    step_size: float = 1.0,
+) -> np.ndarray:
+    minimizer = find_root(
+        F=J,
+        J=H,
+        x0=x0,
+        max_num_iterations=max_num_iterations,
+        eps=eps,
+        step_size=step_size,
+    )
+    return minimizer

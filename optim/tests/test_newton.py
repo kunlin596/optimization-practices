@@ -19,38 +19,63 @@ def c() -> float:
 
 
 @pytest.fixture
-def dummy_func(
+def dummy_F(
     a: float,
     b: float,
     c: float,
 ):
-    def func(
+    def F(
         x: np.ndarray | float,
     ) -> np.ndarray | float:
         return a * x**2 + b * x + c
 
-    return func
+    return F
 
 
 @pytest.fixture
-def dummy_grad(
+def dummy_J(
     a: float,
     b: float,
-    c: float,
 ):
-    def grad(
+    def J(
         x: np.ndarray | float,
     ) -> np.ndarray | float:
-        return a * x + b
+        return 2.0 * a * x + b
 
-    return grad
+    return J
 
 
-def test_newton(dummy_func: callable, dummy_grad: callable):
+@pytest.fixture
+def dummy_H(
+    a: float,
+):
+    def H(
+        x: np.ndarray | float,
+    ) -> np.ndarray | float:
+        return 2.0 * a
+
+    return H
+
+
+def test_newton_root(dummy_F: callable, dummy_J: callable):
+    eps = 1e-5
     root = newton.find_root(
-        func=dummy_func,
-        grad=dummy_grad,
+        F=dummy_F,
+        J=dummy_J,
         x0=4.0,
-        max_num_iterations=100000,
+        eps=eps,
+        max_num_iterations=1000,
     )
-    assert abs(root - 1.0) < 1e-3
+    assert abs(root - 1.0) < 0.003, f"error={abs(root-1.0)}."
+
+
+def test_newton_minimize(dummy_F: callable, dummy_J: callable, dummy_H: callable):
+    eps = 1e-5
+    x = newton.minimize(
+        F=dummy_F,
+        J=dummy_J,
+        H=dummy_H,
+        x0=4.0,
+        eps=eps,
+    )
+    assert abs(x - 1.0) < eps
